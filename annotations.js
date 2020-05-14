@@ -41,16 +41,24 @@ d3.csv('pokemon.csv').then((data) => {
         .attr('transform', `translate(${m.margin},0)`)
         .call(yAxis)
 
-    // append the points
-    const circles = svg.selectAll('circle')
-    .data(data)
-    .join(
-        enter => enter.append('circle')
+    // append the points using an update function
+    // mention how this is analogous to chart.update
+    function update(data) {
+        svg.selectAll('circle')
+            .data(data)
+            .join(
+                enter => enter.append('circle')
+                    .attr('cx', d => xScale(d.Attack))
+                    .attr('cy', d => yScale(d.Defense))
+                    .attr('r', 5)
+                    .attr('fill', 'steelblue'),
+                update => update, // don't do anything
+                exit => exit.remove()            
+            )
             .attr('cx', d => xScale(d.Attack))
             .attr('cy', d => yScale(d.Defense))
-            .attr('r', 5)
-            .attr('fill', 'steelblue')
-    )
+    }
+    update(data)
 
     // append the title and axes labels
     svg.append('text')
@@ -87,14 +95,17 @@ d3.csv('pokemon.csv').then((data) => {
                 .text(d => d)
         )
 
-    // note how in observable we can use the chart.update pattern
-    // to replot the data every time it changes
-    filter.on('change', () => {
-        const type = d3.select('select').node().value
-        circles.attr('display', 'inline')
-        circles.filter(v => v['Type 1'] != type)
-            .attr('display', 'none')
-
+    /**
+     * get the value of the dropdown on change
+     * and use update function to update data
+     * mention how we can use 'this'
+     * also mention that we have to use 'function' keyword
+     * if we want 'this' to work correctly
+     */ 
+    filter.on('change', function() {
+        const type = d3.select(this).node().value
+        const filteredData = data.filter(d => d['Type 1'] == type)
+        update(filteredData)
     })
 
 })

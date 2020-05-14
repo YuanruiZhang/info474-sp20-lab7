@@ -39,16 +39,23 @@ d3.csv('pokemon.csv', d3.autoType).then((data) => {
         .attr('transform', `translate(${m.margin},0)`)
         .call(yAxis)
 
-    // append the points
-    const circles = svg.selectAll('circle')
-        .data(data)
-        .join(
-            enter => enter.append('circle')
-                .attr('cx', d => xScale(d.Attack))
-                .attr('cy', d => yScale(d.Defense))
-                .attr('r', 5)
-                .attr('fill', 'steelblue')
-        )
+    // append the points using an update function
+    function update(data) {
+        svg.selectAll('circle')
+            .data(data)
+            .join(
+                enter => enter.append('circle')
+                    .attr('cx', d => xScale(d.Attack))
+                    .attr('cy', d => yScale(d.Defense))
+                    .attr('r', 5)
+                    .attr('fill', 'steelblue'),
+                update => update, // don't do anything
+                exit => exit.remove()            
+            )
+            .attr('cx', d => xScale(d.Attack))
+            .attr('cy', d => yScale(d.Defense))
+    }
+    update(data)
 
     // append the title and axes labels
     svg.append('text')
@@ -85,15 +92,12 @@ d3.csv('pokemon.csv', d3.autoType).then((data) => {
     
     /**
      * get the value of the dropdown on change
-     * and hide the points that aren't of the specific type
-     * this is a different approach than replotting the whole chart
+     * and use update function to update data
      */ 
-
-    filter.on('change', () => {
-        const type = d3.select('select').node().value
-        circles.attr('display', 'inline')
-        circles.filter(v => v['Type 1'] != type)
-            .attr('display', 'none')
+    filter.on('change', function() {
+        const type = d3.select(this).node().value
+        const filteredData = data.filter(d => d['Type 1'] == type)
+        update(filteredData)
 
     })
 
